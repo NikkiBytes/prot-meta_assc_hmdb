@@ -1,0 +1,14 @@
+{
+    "version": "0.2",
+    "requires" : ["pandas", "bs4", "lxml"],
+    "dumper" : {
+        "data_url" : ["https://hmdb.ca/system/downloads/current/hmdb_metabolites.zip",
+        "https://hmdb.ca/system/downloads/current/hmdb_proteins.zip" ],
+        "uncompress" : true
+    },
+    "uploader" : {
+        "parser" : "parser:load_hmdb_data",
+        "on_duplicates" : "merge"
+        
+    }
+}
