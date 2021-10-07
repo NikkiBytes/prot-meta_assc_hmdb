@@ -12,7 +12,7 @@ process_key = lambda k: k.replace(" ","_").lower()
 # Association Parser    
 def load_hmdb_data(data_folder):
         
-     --- Helper Methods --- 
+    # --- Helper Methods --- 
     # --- Enter subject into document --
     def enter_subject(data, tags):
         # setup subject info       
