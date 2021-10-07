@@ -8,7 +8,7 @@
     },
     "uploader" : {
         "parser" : "parser:load_hmdb_data",
-        "on_duplicates" : "merge"
+        "on_duplicates" : "ignore"
         
     }
 }
