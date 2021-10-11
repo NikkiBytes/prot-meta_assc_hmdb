@@ -170,6 +170,6 @@ def load_hmdb_data(data_folder):
                             data = dict_sweep(data,vals=[np.nan])
                             data_list.append(data)        
 
-    for doc in data_list:
-        #print(json.dumps(doc_, sort_keys=False, indent=4))
-        yield doc
+        for doc in data_list:
+            #print(json.dumps(doc_, sort_keys=False, indent=4))
+            yield doc
