@@ -3,15 +3,13 @@ import os
 import numpy as np
 import xml.etree.ElementTree as ET
 from lxml import etree as etree_lxml
-
 from biothings import config
 from biothings.utils.dataload import dict_convert, dict_sweep
 logging = config.logger
-process_key = lambda k: k.replace(" ","_").lower()
 
 # Association Parser    
 def load_hmdb_data(data_folder):
-        
+    
     # --- Helper Methods --- 
     # --- Enter subject into document --
     def enter_subject(data, tags):
@@ -79,6 +77,8 @@ def load_hmdb_data(data_folder):
         return mapping_dict;
 
     # ------------------------------------------------- 
+
+    process_key = lambda k: k.replace(" ","_").lower()
 
     # --- Set input XML file path ---
     protein_xml = os.path.join(data_folder, "hmdb_proteins.xml")
@@ -170,6 +170,6 @@ def load_hmdb_data(data_folder):
                             data = dict_sweep(data,vals=[np.nan])
                             data_list.append(data)        
 
-        for doc in data_list:
-            #print(json.dumps(doc_, sort_keys=False, indent=4))
-            yield doc
+    for doc in data_list:
+        #print(json.dumps(doc_, sort_keys=False, indent=4))
+        yield doc
