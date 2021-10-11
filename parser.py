@@ -82,7 +82,7 @@ def load_hmdb_data(data_folder):
     def construct_rec(protein_tree, mapping_dict):
         records=[]
         # --- Iterate over the root ---
-        for tags in protein_tree[0].iter():
+        for tags in protein_tree.iter():
             metabolites = [] # holder for metabolite_associations.metabolite, the associations w/o references
             
             if tags.tag == "{http://www.hmdb.ca}protein": # get the protein nodes only
@@ -163,7 +163,7 @@ def load_hmdb_data(data_folder):
         return records;
 
     # --- Execute Program ---
-    process_key = lambda k: k.replace(" ","_").lower()
+    #process_key = lambda k: k.replace(" ","_").lower()
 
     # --- Set input XML file path ---
     protein_xml = os.path.join(data_folder, "hmdb_proteins.xml")
