@@ -1,5 +1,4 @@
 import os
-import numpy as np
 import xml.etree.ElementTree as ET
 from lxml import etree as etree_lxml
 
@@ -150,11 +149,7 @@ def load_hmdb_data(data_folder):
                         records.append(data)        
 
         return records;
-
     # -------------------- Execute Program --------------------
-
-    #process_key = lambda k: k.replace(" ","_").lower()
-
     # --- Set input XML file path ---
     protein_xml = os.path.join(data_folder, "hmdb_proteins.xml")
     meta_xml = os.path.join(data_folder, "hmdb_metabolites.xml")
