@@ -77,18 +77,14 @@ def load_hmdb_data(data_folder):
 
         return mapping_dict;
 
-    # ------------------------------------------------- 
+    # --- Construct Record --- 
 
-    def construct_rec(protein_tree, mapping_dict):
+    def construct_rec(tags, mapping_dict):
         records=[]
-    
-        #if tags.tag == "{http://www.hmdb.ca}protein": # get the protein nodes only        
-        # we need the first accession number, this is main protein _id in our doc
-        _id = tags.find("{http://www.hmdb.ca}accession")
+        _id = tags.find("{http://www.hmdb.ca}accession") # main accession id 
         _id = _id.text   
-        protein_type=tags.find("{http://www.hmdb.ca}protein_type")
+        protein_type=tags.find("{http://www.hmdb.ca}protein_type") # get protein type
         ct=1 # setup counter for the associations
-        
         
         # ---------- Metabolite associations with references ------------  
         for m in tags.findall("{http://www.hmdb.ca}metabolite_references"):
@@ -172,11 +168,7 @@ def load_hmdb_data(data_folder):
     mapping_dict=make_metbolite_dict() # load metabolite file and get the mapping ids 
     # --- Iterate over the root ---
     for tags in protein_tree.findall("{http://www.hmdb.ca}protein"):
-        records=construct_rec(protein_tree, mapping_dict)
+        records=construct_rec(tags, mapping_dict)
         if(records):
             for record in records:
                 yield record #print(json.dumps(record, sort_keys=False, indent=4))
-
-
-    #--------------------------------------------------------------------------------
-    
