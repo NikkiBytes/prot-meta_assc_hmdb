@@ -1,11 +1,8 @@
 import os
-#import pandas as pd
 import numpy as np
 import xml.etree.ElementTree as ET
 from lxml import etree as etree_lxml
-from biothings import config
-from biothings.utils.dataload import dict_convert, dict_sweep
-logging = config.logger
+
 
 # -------------------- HMDB Association Parser --------------------       
 def load_hmdb_data(data_folder):
