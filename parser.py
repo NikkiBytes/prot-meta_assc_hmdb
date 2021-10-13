@@ -1,3 +1,8 @@
+"""
+Title: HMDB Association Parser for BioThings 
+Author: Nichollette Acosta
+Organization: Scripps Institute, Andrew Su and Chunlei Wu labs
+"""
 import os
 import xml.etree.ElementTree as ET
 from lxml import etree as etree_lxml
@@ -7,6 +12,31 @@ from lxml import etree as etree_lxml
 def load_hmdb_data(data_folder):
         
     # -------------------- Helper Methods --------------------
+
+    # --- Create a dictionary to hold our metabolite mapping values from the metabolite XML ---
+    def make_metbolite_dict():
+            # --- Load in the metabolites XML --- 
+        xml_as_bytes = open(meta_xml, 'rb').read()
+        metabolite_tree = etree_lxml.fromstring(xml_as_bytes)
+        metabolite = metabolite_tree.findall('{http://www.hmdb.ca}metabolite', {})
+        mapping_dict={}
+
+        for meta in metabolite:
+            accession=meta.find('{http://www.hmdb.ca}accession')
+            kegg=meta.find('{http://www.hmdb.ca}kegg_id')
+            chemspider=meta.find('{http://www.hmdb.ca}chemspider_id')
+            chebi=meta.find('{http://www.hmdb.ca}chebi_id')
+            pubchem=meta.find('{http://www.hmdb.ca}pubchem_compound_id')
+
+            mapping_dict.setdefault(accession.text, {
+                                                        "kegg_id":kegg.text,
+                                                        "chemspider_id": chemspider.text,
+                                                        "chebi_id": chebi.text,
+                                                        "pubchem_compound_id": pubchem.text
+
+        })
+
+        return mapping_dict;
 
     # --- Enter subject into document --
     def enter_subject(data, tags):
@@ -34,34 +64,6 @@ def load_hmdb_data(data_folder):
 
         return data;
  
-
-    # --- Create a dictionary to hold our metabolite mapping values from the metabolite XML ---
-    def make_metbolite_dict():
-            # --- Load in the metabolites XML --- 
-        xml_as_bytes = open(meta_xml, 'rb').read()
-        metabolite_tree = etree_lxml.fromstring(xml_as_bytes)
-        metabolite = metabolite_tree.findall('{http://www.hmdb.ca}metabolite', {})
-        mapping_dict={}
-
-        for meta in metabolite:
-            accession=meta.find('{http://www.hmdb.ca}accession')
-            kegg=meta.find('{http://www.hmdb.ca}kegg_id')
-            chemspider=meta.find('{http://www.hmdb.ca}chemspider_id')
-            chebi=meta.find('{http://www.hmdb.ca}chebi_id')
-            pubchem=meta.find('{http://www.hmdb.ca}pubchem_compound_id')
-
-            mapping_dict.setdefault(accession.text, {
-                                                        "kegg_id":kegg.text,
-                                                        "chemspider_id": chemspider.text,
-                                                        "chebi_id": chebi.text,
-                                                        "pubchem_compound_id": pubchem.text
-
-        })
-
-        return mapping_dict;
-
-
-
     # --- Enter mapping IDs into the document --- 
     def enter_mapping_ids(mapping_dict, text, data):
         # get the extra IDs from the metabolite xml
@@ -74,7 +76,6 @@ def load_hmdb_data(data_folder):
         return mapping_dict;
 
     # --- Construct Record --- 
-
     def construct_rec(tags, mapping_dict):
         records=[]
         _id = tags.find("{http://www.hmdb.ca}accession") # main accession id 
@@ -149,6 +150,7 @@ def load_hmdb_data(data_folder):
                         records.append(data)        
 
         return records;
+    # ---------------------------------------------------------
     # -------------------- Execute Program --------------------
     # --- Set input XML file path ---
     protein_xml = os.path.join(data_folder, "hmdb_proteins.xml")

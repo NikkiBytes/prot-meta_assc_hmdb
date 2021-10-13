@@ -1,2 +1,3 @@
-# prot-meta_assc_hmdb
-Protein-metabolite associations extracted from hmdb 
+# Protein Metabolite Associations  
+Protein-metabolite associations extracted from [HMDB](https://hmdb.ca/downloads). 
+
