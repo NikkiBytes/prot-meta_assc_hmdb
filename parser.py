@@ -8,72 +8,73 @@ import xml.etree.ElementTree as ET
 from lxml import etree as etree_lxml
 
 
+
+# -------------------- Helper Methods --------------------
+# --- Create a dictionary to hold our metabolite mapping values from the metabolite XML ---
+def make_metbolite_dict(meta_xml):
+        # --- Load in the metabolites XML --- 
+    xml_as_bytes = open(meta_xml, 'rb').read()
+    metabolite_tree = etree_lxml.fromstring(xml_as_bytes)
+    metabolite = metabolite_tree.findall('{http://www.hmdb.ca}metabolite', {})
+    mapping_dict={}
+
+    for meta in metabolite:
+        accession=meta.find('{http://www.hmdb.ca}accession')
+        kegg=meta.find('{http://www.hmdb.ca}kegg_id')
+        chemspider=meta.find('{http://www.hmdb.ca}chemspider_id')
+        chebi=meta.find('{http://www.hmdb.ca}chebi_id')
+        pubchem=meta.find('{http://www.hmdb.ca}pubchem_compound_id')
+
+        mapping_dict.setdefault(accession.text, {
+                                                    "kegg_id":kegg.text,
+                                                    "chemspider_id": chemspider.text,
+                                                    "chebi_id": chebi.text,
+                                                    "pubchem_compound_id": pubchem.text
+
+    })
+
+    return mapping_dict;
+
+# --- Enter subject into document --
+def enter_subject(data, tags):
+    # setup subject info       
+    #uniprot_id, uniprot_name, genbank_protein_id, hgnc_id, genbank_gene_id, and gene_name.        
+    uniprot_id = tags.find("{http://www.hmdb.ca}uniprot_id")
+    uniprot_id = uniprot_id.text
+    data["subject"]["uniprot_id"]=uniprot_id
+
+    uniprot_name= tags.find("{http://www.hmdb.ca}uniprot_name")
+    uniprot_name = uniprot_name.text
+    data["subject"]["uniprot_name"]=uniprot_name
+
+    genbank_protein_id= tags.find("{http://www.hmdb.ca}genbank_protein_id")
+    data["subject"]["genbank_protein_id"]=genbank_protein_id.text
+
+    hgnc_id= tags.find("{http://www.hmdb.ca}hgnc_id")
+    data["subject"]["hgnc_id"]=hgnc_id.text
+
+    genbank_gene_id=tags.find("{http://www.hmdb.ca}genbank_gene_id")
+    data["subject"]["genbank_gene_id"]=genbank_gene_id.text
+
+    gene_name = tags.find("{http://www.hmdb.ca}gene_name")
+    data["subject"]["gene_name"]=gene_name.text
+
+    return data;
+
+# --- Enter mapping IDs into the document --- 
+def enter_mapping_ids(mapping_dict, text, data):
+    # get the extra IDs from the metabolite xml
+    # {'kegg_id': 'C01092', 'chemspider_id': '4578', 'chebi_id': '127029', 'pubchem_compound_id': '4740'}
+    data["object"]["kegg_id"]=mapping_dict[text]["kegg_id"]
+    data["object"]["chemspider_id"]=mapping_dict[text]["chemspider_id"]
+    data["object"]["chebi_id"]=mapping_dict[text]["chebi_id"]
+    data["object"]["pubchem_compound_id"]=mapping_dict[text]["pubchem_compound_id"]
+
+    return mapping_dict;
+
+
 # -------------------- HMDB Association Parser --------------------       
 def load_hmdb_data(data_folder):
-        
-    # -------------------- Helper Methods --------------------
-
-    # --- Create a dictionary to hold our metabolite mapping values from the metabolite XML ---
-    def make_metbolite_dict():
-            # --- Load in the metabolites XML --- 
-        xml_as_bytes = open(meta_xml, 'rb').read()
-        metabolite_tree = etree_lxml.fromstring(xml_as_bytes)
-        metabolite = metabolite_tree.findall('{http://www.hmdb.ca}metabolite', {})
-        mapping_dict={}
-
-        for meta in metabolite:
-            accession=meta.find('{http://www.hmdb.ca}accession')
-            kegg=meta.find('{http://www.hmdb.ca}kegg_id')
-            chemspider=meta.find('{http://www.hmdb.ca}chemspider_id')
-            chebi=meta.find('{http://www.hmdb.ca}chebi_id')
-            pubchem=meta.find('{http://www.hmdb.ca}pubchem_compound_id')
-
-            mapping_dict.setdefault(accession.text, {
-                                                        "kegg_id":kegg.text,
-                                                        "chemspider_id": chemspider.text,
-                                                        "chebi_id": chebi.text,
-                                                        "pubchem_compound_id": pubchem.text
-
-        })
-
-        return mapping_dict;
-
-    # --- Enter subject into document --
-    def enter_subject(data, tags):
-        # setup subject info       
-        #uniprot_id, uniprot_name, genbank_protein_id, hgnc_id, genbank_gene_id, and gene_name.        
-        uniprot_id = tags.find("{http://www.hmdb.ca}uniprot_id")
-        uniprot_id = uniprot_id.text
-        data["subject"]["uniprot_id"]=uniprot_id
-
-        uniprot_name= tags.find("{http://www.hmdb.ca}uniprot_name")
-        uniprot_name = uniprot_name.text
-        data["subject"]["uniprot_name"]=uniprot_name
-
-        genbank_protein_id= tags.find("{http://www.hmdb.ca}genbank_protein_id")
-        data["subject"]["genbank_protein_id"]=genbank_protein_id.text
-
-        hgnc_id= tags.find("{http://www.hmdb.ca}hgnc_id")
-        data["subject"]["hgnc_id"]=hgnc_id.text
-
-        genbank_gene_id=tags.find("{http://www.hmdb.ca}genbank_gene_id")
-        data["subject"]["genbank_gene_id"]=genbank_gene_id.text
-
-        gene_name = tags.find("{http://www.hmdb.ca}gene_name")
-        data["subject"]["gene_name"]=gene_name.text
-
-        return data;
- 
-    # --- Enter mapping IDs into the document --- 
-    def enter_mapping_ids(mapping_dict, text, data):
-        # get the extra IDs from the metabolite xml
-        # {'kegg_id': 'C01092', 'chemspider_id': '4578', 'chebi_id': '127029', 'pubchem_compound_id': '4740'}
-        data["object"]["kegg_id"]=mapping_dict[text]["kegg_id"]
-        data["object"]["chemspider_id"]=mapping_dict[text]["chemspider_id"]
-        data["object"]["chebi_id"]=mapping_dict[text]["chebi_id"]
-        data["object"]["pubchem_compound_id"]=mapping_dict[text]["pubchem_compound_id"]
-
-        return mapping_dict;
 
     # --- Construct Record --- 
     def construct_rec(tags, mapping_dict):
@@ -159,10 +160,11 @@ def load_hmdb_data(data_folder):
     # --- Load Protein XML Data --- 
     xml_data = open(protein_xml, 'r', encoding='UTF-8').read()  # Read file
     protein_tree = ET.XML(xml_data)  # Parse protein XML
-    mapping_dict=make_metbolite_dict() # load metabolite file and get the mapping ids 
+    mapping_dict=make_metbolite_dict(meta_xml) # load metabolite file and get the mapping ids 
     # --- Iterate over the root ---
     for tags in protein_tree.findall("{http://www.hmdb.ca}protein"):
         records=construct_rec(tags, mapping_dict)
         if(records):
-            for record in records:
-                yield record #print(json.dumps(record, sort_keys=False, indent=4))
+            return records;
+            #for record in records:
+            #yield record #print(json.dumps(record, sort_keys=False, indent=4))
