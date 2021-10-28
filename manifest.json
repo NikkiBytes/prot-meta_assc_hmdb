@@ -1,6 +1,11 @@
 {
-    "version": "0.1",
+    "version": "0.2",
     "requires" : ["lxml"],
+    "__metadata__":{
+        "url": "http://www.hmdb.ca",
+        "license_url": "http://www.hmdb.ca/about#cite",
+        "license": "CC BY 4.0"
+    },
     "dumper" : {
         "data_url" : ["https://hmdb.ca/system/downloads/current/hmdb_metabolites.zip",
         "https://hmdb.ca/system/downloads/current/hmdb_proteins.zip" ],
