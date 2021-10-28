@@ -13,12 +13,14 @@ from lxml import etree as etree_lxml
 
 # --- Create a dictionary to hold our metabolite mapping values from the metabolite XML ---
 def make_metbolite_dict(meta_xml):
-        # --- Load in the metabolites XML --- 
+    
+    # --- Load in the metabolites XML --- 
     xml_as_bytes = open(meta_xml, 'rb').read()
     metabolite_tree = etree_lxml.fromstring(xml_as_bytes)
     metabolite = metabolite_tree.findall('{http://www.hmdb.ca}metabolite', {})
     mapping_dict={}
 
+    
     for meta in metabolite:
         accession=meta.find('{http://www.hmdb.ca}accession')
         kegg=meta.find('{http://www.hmdb.ca}kegg_id')
@@ -32,7 +34,7 @@ def make_metbolite_dict(meta_xml):
                                                     "chebi_id": chebi.text,
                                                     "pubchem_compound_id": pubchem.text
 
-    })
+                                                })
 
     return mapping_dict;
 
