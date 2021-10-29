@@ -3,7 +3,7 @@ Title: HMDB Association Parser for BioThings
 Author: Nichollette Acosta
 Organization: Scripps Institute, Andrew Su and Chunlei Wu labs
 """
-import os, logging
+import os
 import xml.etree.ElementTree as ET
 from lxml import etree as etree_lxml
 
@@ -147,8 +147,8 @@ def construct_rec(tags, records, mapping_dict):
                         data=enter_subject(data,tags)  
                         records.append(data)
 
-    except Exception as e:
-        logging.error("Error with %s"%_id)
+    except:
+        continue
 
 
 # -------------------- Main Method --------------------
