@@ -150,9 +150,11 @@ def construct_rec(tags, records, mapping_dict):
     except Exception as e:
         logging.error("Error with %s"%_id)
 
-# -------------------- HMDB Association Data Load --------------------       
+
+# -------------------- Main Method --------------------
+# --- HMDB Association Data Load Method ---  
 def load_hmdb_data(data_folder):
-    # -------------------- Execute Program --------------------
+
     # --- Set input XML file path ---
     protein_xml = os.path.join(data_folder, "hmdb_proteins.xml")
     meta_xml = os.path.join(data_folder, "hmdb_metabolites.xml")
