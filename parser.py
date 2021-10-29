@@ -16,9 +16,9 @@ def make_metbolite_dict(meta_xml):
     xml_as_bytes = open(meta_xml, 'rb').read() # open XML file
     metabolite_tree = etree_lxml.fromstring(xml_as_bytes)
     mapping_dict={}
-
+    metabolites=metabolite_tree.findall('{http://www.hmdb.ca}metabolite', {})
     
-    for meta in metabolite_tree.findall('{http://www.hmdb.ca}metabolite', {}):
+    for meta in metabolites:
         accession=meta.find('{http://www.hmdb.ca}accession')
         kegg=meta.find('{http://www.hmdb.ca}kegg_id')
         chemspider=meta.find('{http://www.hmdb.ca}chemspider_id')
@@ -168,7 +168,7 @@ def load_hmdb_data(data_folder):
     xml_data = open(protein_xml, 'r', encoding='UTF-8').read()  # Read file
     protein_tree = ET.XML(xml_data)  # Parse protein XML file
     # --- Iterate over the root ---
-    for tags in protein_tree.findall("{http://www.hmdb.ca}protein"):
+    for tags in protein_tree.findall("{http://www.hmdb.ca}protein")[:5]:
         construct_rec(tags, records, mapping_dict)
     if(records):
         return records;
