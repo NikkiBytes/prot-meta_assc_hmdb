@@ -148,7 +148,7 @@ def construct_rec(tags, records, mapping_dict):
                         records.append(data)
 
     except:
-        continue
+        pass
 
 
 # -------------------- Main Method --------------------
