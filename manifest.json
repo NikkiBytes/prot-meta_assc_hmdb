@@ -7,7 +7,7 @@
         "license": "CC BY 4.0"
     },
     "dumper" : {
-        "data_url" : ["https://hmdb.ca/system/downloads/current/hmdb_metabolites.zip",
+        "data_url" : ["https://hmdb.ca/system/downloads/4.0/hmdb_metabolites.zip",
         "https://hmdb.ca/system/downloads/current/hmdb_proteins.zip" ],
         "uncompress" : true
     },

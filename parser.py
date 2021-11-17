@@ -1,7 +1,7 @@
 """
 Title: HMDB Association Parser for BioThings 
 Author: Nichollette Acosta
-Organization: Scripps Institute, Andrew Su and Chunlei Wu labs
+Organization: Scripps Institute, Andrew Su and Chunlei Wu lab
 """
 import os
 import xml.etree.ElementTree as ET
@@ -9,13 +9,17 @@ from lxml import etree as etree_lxml
 
 
 # -------------------- Helper Methods --------------------
-# --- Metabolite Dictionary Method ---
-# Create a dictionary to hold our metabolite mapping values from the metabolite XML 
+
 def make_metbolite_dict(meta_xml):
+    """
+    # Create a dictionary to hold our metabolite mapping values 
+    # from the metabolite XML 
+    """
     # --- Load in the metabolites XML --- 
-    xml_as_bytes = open(meta_xml, 'rb').read() # open XML file
-    metabolite_tree = etree_lxml.fromstring(xml_as_bytes)
-    mapping_dict={}
+    xml_as_bytes = open(meta_xml, 'rb').read() 
+    metabolite_tree = etree_lxml.fromstring(xml_as_bytes) 
+
+    mapping_dict={} #initialize dictionary
     metabolites=metabolite_tree.findall('{http://www.hmdb.ca}metabolite', {})
     
     for meta in metabolites:
@@ -36,10 +40,12 @@ def make_metbolite_dict(meta_xml):
     
     return mapping_dict;
 
-# --- Enter Subject Method --- 
-# Enter subject into document 
+
 def enter_subject(data, tags):
-    # setup subject info       
+    """
+    # Enter Subject Method
+    # Enter subject into document 
+    """
     #uniprot_id, uniprot_name, genbank_protein_id, hgnc_id, genbank_gene_id, and gene_name.        
     uniprot_id = tags.find("{http://www.hmdb.ca}uniprot_id")
     uniprot_id = uniprot_id.text
@@ -63,9 +69,12 @@ def enter_subject(data, tags):
 
     return data;
 
-# --- Mapping ID Method ---  
-# Enter mapping IDs into the document 
+
 def enter_mapping_ids(mapping_dict, text, data):
+    """
+    # Mapping ID  
+    # Enter mapping IDs into the document 
+    """
     # get the extra IDs from the metabolite xml
     # {'kegg_id': 'C01092', 'chemspider_id': '4578', 'chebi_id': '127029', 'pubchem_compound_id': '4740'}
     data["object"]["kegg_id"]=mapping_dict[text]["kegg_id"]
@@ -75,10 +84,12 @@ def enter_mapping_ids(mapping_dict, text, data):
 
     return mapping_dict;
 
-# --- Construct Record Method ---
-# This is essentially the main controller method, it contains the major loops and data entry 
+
 def construct_rec(tags, records, mapping_dict):
-    
+    """
+    # Construct Record 
+    # This is essentially the main controller method, it contains the major loops and data entry 
+    """
     try:
         _id = tags.find("{http://www.hmdb.ca}accession") # main accession id 
         _id = _id.text   
@@ -151,10 +162,11 @@ def construct_rec(tags, records, mapping_dict):
         pass
 
 
-# -------------------- Main Method --------------------
-# --- HMDB Association Data Load Method ---  
-def load_hmdb_data(data_folder):
 
+def load_hmdb_data(data_folder):
+    """
+    # HMDB Association Data Load Method Main Method
+    """
     # --- Set input XML file path ---
     protein_xml = os.path.join(data_folder, "hmdb_proteins.xml")
     meta_xml = os.path.join(data_folder, "hmdb_metabolites.xml")
