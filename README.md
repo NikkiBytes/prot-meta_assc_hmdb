@@ -3,6 +3,8 @@
   
 ## Notes  
 
+
+- **Association-style** document  
 - The input metabolite file, `hmdb_metabolites.xml`, the current version 5.0 is corrupt and produces error `BAD CRC-32`, reference file [here]() for more details. Version 4.0 of the file is being used, *may want to update this in the future.*  
 
 ## <u> Document Structure </u>
