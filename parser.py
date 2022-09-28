@@ -1,14 +1,8 @@
-"""
-Title: HMDB Association Parser for BioThings 
-Author: Nichollette Acosta
-Organization: Scripps Institute, Andrew Su and Chunlei Wu lab
-"""
 import os
 import xml.etree.ElementTree as ET
+
 from lxml import etree as etree_lxml
 
-
-# -------------------- Helper Methods --------------------
 
 def make_metbolite_dict(meta_xml):
     """
@@ -173,7 +167,6 @@ def construct_rec(tags, records, mapping_dict):
         pass
 
 
-
 def load_hmdb_data(data_folder):
     """
     # HMDB Association Data Load Method Main Method
@@ -182,15 +175,13 @@ def load_hmdb_data(data_folder):
     protein_xml = os.path.join(data_folder, "hmdb_proteins.xml")
     meta_xml = os.path.join(data_folder, "hmdb_metabolites.xml")
 
-    records=[] #final data holder
+    records=[] 
     
-   # --- Make the mapping dictionary ---
-    mapping_dict=make_metbolite_dict(meta_xml) # load metabolite XML file and get the mapping ids 
+    mapping_dict=make_metbolite_dict(meta_xml)                  # load metabolite XML file and get the mapping ids 
     
-     # --- Load Protein XML Data --- 
     xml_data = open(protein_xml, 'r', encoding='UTF-8').read()  # Read file
-    protein_tree = ET.XML(xml_data)  # Parse protein XML file
-    # --- Iterate over the root ---
+    protein_tree = ET.XML(xml_data)                             # Parse protein XML file
+
     for tags in protein_tree.findall("{http://www.hmdb.ca}protein")[:5]:
         construct_rec(tags, records, mapping_dict)
     if(records):
