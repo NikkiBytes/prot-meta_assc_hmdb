@@ -30,14 +30,13 @@ def make_metbolite_dict(meta_xml):
         pubchem=meta.find('{http://www.hmdb.ca}pubchem_compound_id')
 
         mapping_dict.setdefault(accession.text, {
-                                                    "kegg_id":kegg.text,
-                                                    "chemspider_id": chemspider.text,
-                                                    "chebi_id": chebi.text,
-                                                    "pubchem_compound_id": pubchem.text
+            "kegg_id":kegg.text,
+            "chemspider_id": chemspider.text,
+            "chebi_id": chebi.text,
+            "pubchem_compound_id": pubchem.text
+            }
+        )
 
-                                                })
-
-    
     return mapping_dict;
 
 
@@ -77,10 +76,22 @@ def enter_mapping_ids(mapping_dict, text, data):
     """
     # get the extra IDs from the metabolite xml
     # {'kegg_id': 'C01092', 'chemspider_id': '4578', 'chebi_id': '127029', 'pubchem_compound_id': '4740'}
-    data["object"]["kegg_id"]=mapping_dict[text]["kegg_id"]
-    data["object"]["chemspider_id"]=mapping_dict[text]["chemspider_id"]
-    data["object"]["chebi_id"]=mapping_dict[text]["chebi_id"]
-    data["object"]["pubchem_compound_id"]=mapping_dict[text]["pubchem_compound_id"]
+    if mapping_dict[text]["kegg_id"]:
+        data["object"]["kegg_id"] = mapping_dict[text]["kegg_id"]
+    else:
+        data["object"]["kegg_id"] = ""
+    if mapping_dict[text]["chemspider_id"]:
+        data["object"]["chemspider_id"] = mapping_dict[text]["chemspider_id"]
+    else:
+        data["object"]["chemspider_id"] = ""
+    if mapping_dict[text]["chebi_id"]:
+        data["object"]["chebi_id"] = mapping_dict[text]["chebi_id"]
+    else:
+        data["object"]["chebi_id"] = ""
+    if mapping_dict[text]["pubchem_compound_id"]:
+        data["object"]["pubchem_compound_id"] = mapping_dict[text]["pubchem_compound_id"]
+    else:
+        data["object"]["pubchem_compound_id"] = ""
 
     return mapping_dict;
 
@@ -184,4 +195,3 @@ def load_hmdb_data(data_folder):
         construct_rec(tags, records, mapping_dict)
     if(records):
         return records;
-        
