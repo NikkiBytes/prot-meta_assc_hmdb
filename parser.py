@@ -182,7 +182,7 @@ def load_hmdb_data(data_folder):
     xml_data = open(protein_xml, 'r', encoding='UTF-8').read()  # Read file
     protein_tree = ET.XML(xml_data)                             # Parse protein XML file
 
-    for tags in protein_tree.findall("{http://www.hmdb.ca}protein")[:5]:
+    for tags in protein_tree.findall("{http://www.hmdb.ca}protein"):
         construct_rec(tags, records, mapping_dict)
     if(records):
         return records;
