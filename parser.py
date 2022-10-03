@@ -52,8 +52,8 @@ def make_metabolite_dict(metabolites_xml_path: str):
     # --- Load in the metabolites XML ---
     root = etree.parse(metabolites_xml_path)
     for metabolite in root.findall('{http://www.hmdb.ca}metabolite'):
-        # all 'accessions' are not None
-        # other fields contains None
+        # all 'accession.text's are not None
+        # other text fields may contain None
         accession = metabolite.find('{http://www.hmdb.ca}accession')
         kegg = metabolite.find('{http://www.hmdb.ca}kegg_id')
         chemspider = metabolite.find('{http://www.hmdb.ca}chemspider_id')
@@ -211,6 +211,6 @@ def load_hmdb_data(data_folder):
         yield from construct_rec(protein, metabolite_dict)
 
 
-if __name__ == "__main__":
-    for doc in load_hmdb_data("."):
-        print(doc)
+# if __name__ == "__main__":
+#     for doc in load_hmdb_data("."):
+#         print(doc)
