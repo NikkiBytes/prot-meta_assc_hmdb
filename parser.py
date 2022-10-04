@@ -1,170 +1,197 @@
 import os
-import xml.etree.ElementTree as ET
+from lxml import etree
 
-from lxml import etree as etree_lxml
+"""
+The cardinality relationships between the elements of our interest in hmdb_proteins.xml are described below:
+
+    <protein>
+        <metabolite_references>                    <!-- ONLY ONE for each <protein> -->
+            <metabolite_reference>                 <!-- MULTIPLE for each <metabolite_references> -->
+                <metabolite>                       <!-- ONLY ONE for each <metabolite_reference> -->
+                    <name> XXX </name>             <!-- ONLY ONE for each <metabolite> -->
+                    <accession> XXX </accession>   <!-- ONLY ONE for each <metabolite> -->
+                </metabolite>
+                <reference>                        <!-- ONLY ONE for each <metabolite_reference> -->
+                    <pubmed_id> XXX </pubmed_id>   <!-- ONLY ONE for each <reference> -->
+                </reference>
+            </metabolite_reference>
+
+            <metabolite_reference>
+                <!-- ignored -->
+            </metabolite_reference>
+        </metabolite_references>
+
+        <metabolite_associations>                  <!-- ONLY ONE for each <protein> -->
+            <metabolite>                           <!-- MULTIPLE for each <metabolite_associations> -->
+                <name> XXX </name>                 <!-- ONLY ONE for each <metabolite> -->
+                <accession> XXX </accession>       <!-- ONLY ONE for each <metabolite> -->
+            </metabolite>
+
+            <metabolite>
+                <!-- ignored -->
+            </metabolite>
+        </metabolite_associations>
+    </protein>
+
+For those 1-to-1 relationships, lxml `find()` method will suffice to locate the element;
+for those 1-to-N relationships, lxml `find_all()` method should be used.
+"""
+
+# Seen accession IDs
+# When creating documents from <metabolite_associations>, we need to check if the accession IDs found inside are not used yet
+OBJECT_ACCESSIONS = set()
 
 
-def make_metbolite_dict(meta_xml):
+def make_metabolite_dict(metabolites_xml_path: str):
     """
-    # Create a dictionary to hold our metabolite mapping values 
-    # from the metabolite XML 
+    # Create a dictionary to hold our metabolite mapping values
+    # from the metabolite XML
     """
-    # --- Load in the metabolites XML --- 
-    xml_as_bytes = open(meta_xml, 'rb').read() 
-    metabolite_tree = etree_lxml.fromstring(xml_as_bytes) 
+    metabolite_dict = {}  # initialize dictionary
 
-    mapping_dict={} #initialize dictionary
-    metabolites=metabolite_tree.findall('{http://www.hmdb.ca}metabolite', {})
-    
-    for meta in metabolites:
-        accession=meta.find('{http://www.hmdb.ca}accession')
-        kegg=meta.find('{http://www.hmdb.ca}kegg_id')
-        chemspider=meta.find('{http://www.hmdb.ca}chemspider_id')
-        chebi=meta.find('{http://www.hmdb.ca}chebi_id')
-        pubchem=meta.find('{http://www.hmdb.ca}pubchem_compound_id')
+    # --- Load in the metabolites XML ---
+    root = etree.parse(metabolites_xml_path)
+    for metabolite in root.findall('{http://www.hmdb.ca}metabolite'):
+        # all 'accession.text's are not None
+        # other text fields may contain None
+        accession = metabolite.find('{http://www.hmdb.ca}accession')
+        kegg = metabolite.find('{http://www.hmdb.ca}kegg_id')
+        chemspider = metabolite.find('{http://www.hmdb.ca}chemspider_id')
+        chebi = metabolite.find('{http://www.hmdb.ca}chebi_id')
+        pubchem = metabolite.find('{http://www.hmdb.ca}pubchem_compound_id')
 
-        mapping_dict.setdefault(accession.text, {
-            "kegg_id":kegg.text,
-            "chemspider_id": chemspider.text,
-            "chebi_id": chebi.text,
-            "pubchem_compound_id": pubchem.text
-            }
-        )
+        metabolite_dict[accession.text] = {
+            "kegg_id": kegg.text or "",
+            "chemspider_id": chemspider.text or "",
+            "chebi_id": chebi.text or "",
+            "pubchem_compound_id": pubchem.text or ""
+        }
 
-    return mapping_dict;
+    return metabolite_dict
 
 
-def enter_subject(data, tags):
+def enter_subject(data: dict, protein: etree._Element):
     """
-    # Enter Subject Method
-    # Enter subject into document 
+    Fill subject fields into document
     """
-    #uniprot_id, uniprot_name, genbank_protein_id, hgnc_id, genbank_gene_id, and gene_name.        
-    uniprot_id = tags.find("{http://www.hmdb.ca}uniprot_id")
-    uniprot_id = uniprot_id.text
-    data["subject"]["uniprot_id"]=uniprot_id
+    # protein_type, uniprot_id, uniprot_name, genbank_protein_id, hgnc_id, genbank_gene_id, and gene_name.
+    protein_type = protein.find("{http://www.hmdb.ca}protein_type")
+    data["subject"]["protein_type"] = protein_type.text or ""
 
-    uniprot_name= tags.find("{http://www.hmdb.ca}uniprot_name")
-    uniprot_name = uniprot_name.text
-    data["subject"]["uniprot_name"]=uniprot_name
+    uniprot_id = protein.find("{http://www.hmdb.ca}uniprot_id")
+    data["subject"]["uniprot_id"] = uniprot_id.text or ""
 
-    genbank_protein_id= tags.find("{http://www.hmdb.ca}genbank_protein_id")
-    data["subject"]["genbank_protein_id"]=genbank_protein_id.text
+    uniprot_name = protein.find("{http://www.hmdb.ca}uniprot_name")
+    data["subject"]["uniprot_name"] = uniprot_name.text or ""
 
-    hgnc_id= tags.find("{http://www.hmdb.ca}hgnc_id")
-    data["subject"]["hgnc_id"]=hgnc_id.text
+    genbank_protein_id = protein.find("{http://www.hmdb.ca}genbank_protein_id")
+    data["subject"]["genbank_protein_id"] = genbank_protein_id.text or ""
 
-    genbank_gene_id=tags.find("{http://www.hmdb.ca}genbank_gene_id")
-    data["subject"]["genbank_gene_id"]=genbank_gene_id.text
+    hgnc_id = protein.find("{http://www.hmdb.ca}hgnc_id")
+    data["subject"]["hgnc_id"] = hgnc_id.text or ""
 
-    gene_name = tags.find("{http://www.hmdb.ca}gene_name")
-    data["subject"]["gene_name"]=gene_name.text
+    genbank_gene_id = protein.find("{http://www.hmdb.ca}genbank_gene_id")
+    data["subject"]["genbank_gene_id"] = genbank_gene_id.text or ""
 
-    return data;
+    gene_name = protein.find("{http://www.hmdb.ca}gene_name")
+    data["subject"]["gene_name"] = gene_name.text or ""
+
+    return data
 
 
-def enter_mapping_ids(mapping_dict, text, data):
+def enter_object(data: dict, metabolite_dict: dict, accession: str):
     """
-    # Mapping ID  
-    # Enter mapping IDs into the document 
+    Fill object fields into document
     """
     # get the extra IDs from the metabolite xml
     # {'kegg_id': 'C01092', 'chemspider_id': '4578', 'chebi_id': '127029', 'pubchem_compound_id': '4740'}
-    if mapping_dict[text]["kegg_id"]:
-        data["object"]["kegg_id"] = mapping_dict[text]["kegg_id"]
-    else:
-        data["object"]["kegg_id"] = ""
-    if mapping_dict[text]["chemspider_id"]:
-        data["object"]["chemspider_id"] = mapping_dict[text]["chemspider_id"]
-    else:
-        data["object"]["chemspider_id"] = ""
-    if mapping_dict[text]["chebi_id"]:
-        data["object"]["chebi_id"] = mapping_dict[text]["chebi_id"]
-    else:
-        data["object"]["chebi_id"] = ""
-    if mapping_dict[text]["pubchem_compound_id"]:
-        data["object"]["pubchem_compound_id"] = mapping_dict[text]["pubchem_compound_id"]
-    else:
-        data["object"]["pubchem_compound_id"] = ""
 
-    return mapping_dict;
+    data["object"]["kegg_id"] = metabolite_dict[accession]["kegg_id"]
+    data["object"]["chemspider_id"] = metabolite_dict[accession]["chemspider_id"]
+    data["object"]["chebi_id"] = metabolite_dict[accession]["chebi_id"]
+    data["object"]["pubchem_compound_id"] = metabolite_dict[accession]["pubchem_compound_id"]
+
+    return data
 
 
-def construct_rec(tags, records, mapping_dict):
+def construct_rec(protein: etree._Element, metabolite_dict: dict):
     """
-    # Construct Record 
-    # This is essentially the main controller method, it contains the major loops and data entry 
+    # Construct Record
+    # This is essentially the main controller method, it contains the major loops and data entry
     """
-    try:
-        _id = tags.find("{http://www.hmdb.ca}accession") # main accession id 
-        _id = _id.text   
-        protein_type=tags.find("{http://www.hmdb.ca}protein_type") # get protein type
-        ct=1 # setup counter for the associations
-        
-        # ---------- Metabolite associations with references ------------  
-        for m in tags.findall("{http://www.hmdb.ca}metabolite_references"):
-            for ref in m:
-                # set the main accession id 
-                _id2=_id+"_%s"%ct
-                ct+=1 # update accession counter
-                # create dictionary document
-                data={}
-                data={ "_id": _id2, "pmid": None, "subject": { "protein_type": protein_type.text}, "object":{}}
+    protein_accession = protein.find("{http://www.hmdb.ca}accession")  # main accession id
+    ct = 1  # setup counter for the associations
 
-                # pull out the reference tags and get the pubmed_id
-                for met_ref in ref.findall("{http://www.hmdb.ca}reference"):
-                    for refs in met_ref:
-                        if "pubmed_id" in refs.tag:
-                            data['pmid']=refs.text
+    # ---------- Metabolite associations with references ------------
+    # every protein element has only one "metabolite_references", which contains multiple "metabolite_reference"s
+    metabolite_references = protein.find("{http://www.hmdb.ca}metabolite_references")
+    for metabolite_reference in metabolite_references.findall("{http://www.hmdb.ca}metabolite_reference"):
+        metabolite = metabolite_reference.find("{http://www.hmdb.ca}metabolite")
+        metabolite_accession = metabolite.find("{http://www.hmdb.ca}accession")
+        metabolite_name = metabolite.find("{http://www.hmdb.ca}name")
 
-                for met in ref.findall("{http://www.hmdb.ca}metabolite"):
-                    for info in met:
-                        tag=info.tag.split("}")[1]
-                        text=info.text
-                        data["object"][tag]=text
+        # make sure that `enter_object` won't raise a KeyError
+        if metabolite_accession.text not in metabolite_dict:
+            continue
 
-                        if "accession" in tag:
-                            enter_mapping_ids(mapping_dict, text, data)
-                        
-                # Call enter_subject method to fill in subject data 
-                data=enter_subject(data,tags)                
-                records.append(data)
+        reference = metabolite_reference.find("{http://www.hmdb.ca}reference")
+        reference_pubmed_id = reference.find("{http://www.hmdb.ca}pubmed_id")
 
-        # ---------- Metabolite associations without references ------------         
-        # find the metabolite_association tags and extract the information
-        for met_assc in tags.findall("{http://www.hmdb.ca}metabolite_associations"):
-            for met_assc_ in met_assc.findall("{http://www.hmdb.ca}metabolite"):
-                for met_assc_id in met_assc_.findall("{http://www.hmdb.ca}accession"):
-                    
-                    # --- Check for duplicate ID, if found, skip making document --- 
-                    # if the metabolite association was already present above (in metabolite_refereces)
-                    # we want to pass adding id to dict to avoid making a duplicate document 
-                    pass_assc=False # set bool 
-                    for elem in records:
-                        if met_assc_id.text == elem['object']['accession']:                            
-                            pass_assc = True
-                            
-                    # if bool is True pass making duplicate doc       
-                    if pass_assc==True: 
-                        pass
+        _id = protein_accession.text + "_%s" % ct  # set the main accession id
+        ct += 1  # update accession counter
 
-                    # else create the document 
-                    else:
-                        # create data dict for association accession 
-                        data={"_id": _id+"_%s"%ct, 'pmid': 'Unknown', 'subject':{}, 'object':{'accession': met_assc_id.text} }
-                        ct+=1 # update the id counter 
+        data = {
+            "_id": _id,
+            "pmid": None,
+            "subject": {},
+            "object": {}
+        }
 
-                        enter_mapping_ids(mapping_dict, met_assc_id.text, data) # add the mapping ids for this accession
+        data['pmid'] = reference_pubmed_id.text
+        data["object"]["accession"] = metabolite_accession.text
+        data["object"]["name"] = metabolite_name.text
 
-                        for met_assc_name in met_assc_.findall("{http://www.hmdb.ca}name"):
-                            data["object"]['name'] = met_assc_name.text
+        data = enter_object(data, metabolite_dict, metabolite_accession.text)
+        data = enter_subject(data, protein)
 
-                        # Call enter_subject method to fill in subject data 
-                        data=enter_subject(data,tags)  
-                        records.append(data)
+        OBJECT_ACCESSIONS.add(metabolite_accession.text)
+        yield data
 
-    except:
-        pass
+    # ---------- Metabolite associations without references ------------
+    # find the metabolite_association tags and extract the information
+    metabolite_associations = protein.find("{http://www.hmdb.ca}metabolite_associations")
+    for metabolite in metabolite_associations.findall("{http://www.hmdb.ca}metabolite"):
+        metabolite_accession = metabolite.find("{http://www.hmdb.ca}accession")
+        metabolite_name = metabolite.find("{http://www.hmdb.ca}name")
+
+        # --- Check for duplicate ID, if found, skip making document ---
+        # if the metabolite association was already present above (in metabolite_refereces)
+        # we want to pass adding id to dict to avoid making a duplicate document
+        if metabolite_accession.text in OBJECT_ACCESSIONS:
+            continue
+
+        # make sure that `enter_object` won't raise a KeyError
+        if metabolite_accession.text not in metabolite_dict:
+            continue
+
+        _id = protein_accession.text + "_%s" % ct  # set the main accession id
+        ct += 1  # update accession counter
+
+        data = {
+            "_id": _id,
+            'pmid': 'Unknown',
+            'subject': {},
+            'object': {}
+        }
+
+        data["object"]["accession"] = metabolite_accession.text
+        data["object"]['name'] = metabolite_name.text
+
+        data = enter_object(data, metabolite_dict, metabolite_accession.text)
+        data = enter_subject(data, protein)
+
+        OBJECT_ACCESSIONS.add(metabolite_accession.text)
+        yield data
 
 
 def load_hmdb_data(data_folder):
@@ -175,14 +202,15 @@ def load_hmdb_data(data_folder):
     protein_xml = os.path.join(data_folder, "hmdb_proteins.xml")
     meta_xml = os.path.join(data_folder, "hmdb_metabolites.xml")
 
-    records=[] 
-    
-    mapping_dict=make_metbolite_dict(meta_xml)                  # load metabolite XML file and get the mapping ids 
-    
-    xml_data = open(protein_xml, 'r', encoding='UTF-8').read()  # Read file
-    protein_tree = ET.XML(xml_data)                             # Parse protein XML file
+    # load metabolite XML file and get the mapping ids
+    metabolite_dict = make_metabolite_dict(meta_xml)
 
-    for tags in protein_tree.findall("{http://www.hmdb.ca}protein"):
-        construct_rec(tags, records, mapping_dict)
-    if(records):
-        return records;
+    # Parse protein XML file
+    protein_tree = etree.parse(protein_xml)
+    for protein in protein_tree.findall("{http://www.hmdb.ca}protein"):
+        yield from construct_rec(protein, metabolite_dict)
+
+
+# if __name__ == "__main__":
+#     for doc in load_hmdb_data("."):
+#         print(doc)
